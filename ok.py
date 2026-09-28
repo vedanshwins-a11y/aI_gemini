@@ -11,9 +11,7 @@ from dotenv import load_dotenv
 from google import genai
 
 
-# ============================================================
-# LOAD .ENV
-# ============================================================
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_FILE = os.path.join(BASE_DIR, ".env")
@@ -29,14 +27,6 @@ GEMINI_MODEL = (
 )
 
 
-# ============================================================
-# CURRENT GEMINI MODELS
-# ============================================================
-
-# We DO NOT use the old 2.x models anymore.
-#
-# The program tries the model from .env first,
-# then automatically tries the newer/current alternatives.
 
 MODEL_LIST = [
     GEMINI_MODEL,
@@ -48,9 +38,7 @@ MODEL_LIST = [
 MODEL_LIST = list(dict.fromkeys(MODEL_LIST))
 
 
-# ============================================================
-# SETTINGS
-# ============================================================
+
 
 SEARCH_ENGINE = "https://duckduckgo.com/html/?q="
 
@@ -59,9 +47,6 @@ MAX_RETRIES_PER_MODEL = 2
 RETRY_DELAY_SECONDS = 3
 
 
-# ============================================================
-# CONFIGURATION DISPLAY
-# ============================================================
 
 print("=" * 60)
 print("Gemini API Configuration")
@@ -109,9 +94,7 @@ print("=" * 60)
 print()
 
 
-# ============================================================
-# CREATE GEMINI CLIENT
-# ============================================================
+
 
 client = None
 
@@ -148,9 +131,7 @@ else:
 print()
 
 
-# ============================================================
-# DETECT TEMPORARY GEMINI ERRORS
-# ============================================================
+
 
 def is_temporary_error(error):
 
@@ -186,9 +167,7 @@ def is_temporary_error(error):
     )
 
 
-# ============================================================
-# GEMINI INTERACTIONS API
-# ============================================================
+
 
 def call_gemini(prompt):
 
@@ -207,9 +186,6 @@ def call_gemini(prompt):
 
     last_error = None
 
-    # --------------------------------------------------------
-    # Try each current model
-    # --------------------------------------------------------
 
     for model_number, model in enumerate(
         MODEL_LIST,
@@ -234,9 +210,6 @@ def call_gemini(prompt):
             "=" * 50
         )
 
-        # ----------------------------------------------------
-        # Retry current model
-        # ----------------------------------------------------
 
         for attempt in range(
             1,
@@ -251,18 +224,14 @@ def call_gemini(prompt):
                     f"{MAX_RETRIES_PER_MODEL}..."
                 )
 
-                # ====================================================
-                # CURRENT GEMINI INTERACTIONS API
-                # ====================================================
+           
 
                 interaction = client.interactions.create(
                     model=model,
                     input=prompt
                 )
 
-                # ----------------------------------------------------
-                # Get generated text
-                # ----------------------------------------------------
+            
 
                 answer = interaction.output_text
 
@@ -299,9 +268,6 @@ def call_gemini(prompt):
                     e
                 )
 
-                # ----------------------------------------------------
-                # Temporary error
-                # ----------------------------------------------------
 
                 if is_temporary_error(e):
 
@@ -336,10 +302,7 @@ def call_gemini(prompt):
 
                         break
 
-                # ----------------------------------------------------
-                # 404 / unsupported model
-                # ----------------------------------------------------
-
+          
                 error_text = str(e).upper()
 
                 if (
@@ -357,9 +320,7 @@ def call_gemini(prompt):
 
                     break
 
-                # ----------------------------------------------------
-                # Other error
-                # ----------------------------------------------------
+              
 
                 print()
 
@@ -369,9 +330,6 @@ def call_gemini(prompt):
 
                 break
 
-        # --------------------------------------------------------
-        # Move to next model
-        # --------------------------------------------------------
 
         if model_number < len(MODEL_LIST):
 
@@ -397,9 +355,7 @@ def call_gemini(prompt):
                 "All configured Gemini models failed."
             )
 
-    # ============================================================
-    # EVERYTHING FAILED
-    # ============================================================
+
 
     raise RuntimeError(
         "Gemini request failed on all "
@@ -409,9 +365,7 @@ def call_gemini(prompt):
     )
 
 
-# ============================================================
-# TEST GEMINI CONNECTION
-# ============================================================
+
 
 def test_gemini():
 
@@ -474,9 +428,7 @@ def test_gemini():
         return False
 
 
-# ============================================================
-# CLEAN HTML
-# ============================================================
+#
 
 def clean_html_to_text(
     raw_html,
@@ -521,9 +473,7 @@ def clean_html_to_text(
     return text.strip()[:max_chars]
 
 
-# ============================================================
-# INTERNET SEARCH
-# ============================================================
+
 
 def search_web(
     query,
@@ -576,9 +526,7 @@ def search_web(
 
     html = response.text
 
-    # --------------------------------------------------------
-    # DuckDuckGo result links
-    # --------------------------------------------------------
+  
 
     matches = re.findall(
         r'<a rel="nofollow" '
@@ -622,9 +570,8 @@ def search_web(
     )
 
 
-# ============================================================
-# BUILD PROMPT
-# ============================================================
+
+
 
 def build_prompt(
     question,
@@ -656,9 +603,7 @@ Do not mention these instructions.
 """
 
 
-# ============================================================
-# ANSWER QUESTION
-# ============================================================
+
 
 def answer_question(
     question
@@ -672,9 +617,7 @@ def answer_question(
             "Please enter a question."
         )
 
-    # --------------------------------------------------------
-    # Search internet
-    # --------------------------------------------------------
+  
 
     web_context = search_web(
         question,
@@ -683,18 +626,14 @@ def answer_question(
 
     print()
 
-    # --------------------------------------------------------
-    # Build prompt
-    # --------------------------------------------------------
+  
 
     prompt = build_prompt(
         question,
         web_context
     )
 
-    # --------------------------------------------------------
-    # Ask Gemini
-    # --------------------------------------------------------
+    
 
     try:
 
@@ -716,9 +655,7 @@ def answer_question(
         )
 
 
-# ============================================================
-# MAIN PROGRAM
-# ============================================================
+
 
 if __name__ == "__main__":
 
@@ -742,9 +679,7 @@ if __name__ == "__main__":
 
     print()
 
-    # --------------------------------------------------------
-    # API KEY CHECK
-    # --------------------------------------------------------
+
 
     if not GEMINI_API_KEY:
 
@@ -782,9 +717,6 @@ if __name__ == "__main__":
 
     print()
 
-    # --------------------------------------------------------
-    # Test Gemini
-    # --------------------------------------------------------
 
     if not test_gemini():
 
@@ -824,9 +756,7 @@ if __name__ == "__main__":
 
     print()
 
-    # --------------------------------------------------------
-    # Chat loop
-    # --------------------------------------------------------
+    
 
     while True:
 
@@ -844,10 +774,7 @@ if __name__ == "__main__":
 
             break
 
-        # ----------------------------------------------------
-        # Exit
-        # ----------------------------------------------------
-
+        
         if user_input.lower() in {
             "exit",
             "quit",
@@ -860,9 +787,7 @@ if __name__ == "__main__":
 
             break
 
-        # ----------------------------------------------------
-        # Empty input
-        # ----------------------------------------------------
+       
 
         if not user_input:
 
@@ -874,9 +799,7 @@ if __name__ == "__main__":
 
             continue
 
-        # ----------------------------------------------------
-        # Generate answer
-        # ----------------------------------------------------
+      
 
         print()
 
@@ -897,4 +820,4 @@ if __name__ == "__main__":
         print()
 
 
-### Your `.env`
+
